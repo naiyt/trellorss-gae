@@ -49,3 +49,26 @@ input[type=text]
 	transition: all .2s linear;
 	width: 200px;
 }
+
+* {
+	margin: 0px;
+}
+
+p {
+	margin-top: 8px;
+	margin-bottom: 8px;
+}
+
+html, body {
+	height: 99%;
+	margin: 8px;
+}
+.wrapper {
+	min-height: 100%;
+	height: auto !important;
+	height: 100%;
+	margin: 0 auto -4em;
+}
+.footer, .push {
+	height: 4em;
+}

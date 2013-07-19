@@ -16,9 +16,23 @@ def get_user(user):
 	return user_db
 
 def get_feeds(feeds):
-	if feeds:
 		feeds = ndb.get_multi(feeds)
 		return [x for x in feeds if x is not None]
+
+def delete_feeds(feeds,user):
+	feed_objs = get_feeds(make_keys(feeds))
+	for feed in feed_objs:
+		memcache.delete(str(feed.key.integer_id()))
+		if feed in user.feeds:
+			user.feeds.remove(feed)
+		feed.key.delete()
+	user.put()
+
+def make_keys(feeds):
+	keys = []
+	for feed in feeds:
+		keys.append(ndb.Key('Feed', int(feed)))
+	return keys
 
 # http://stackoverflow.com/questions/7160737/python-how-to-validate-a-url-in-python-malformed-or-not
 url_regex = re.compile(
@@ -70,8 +84,6 @@ def create_feed(user,board_id,title,link,description,actions,public_board,get_al
 		user.feeds = [feed.key]
 		user.put()
 	return create_url(feed.key.id())
-
-
 
 
 def get_feed(feed_id):

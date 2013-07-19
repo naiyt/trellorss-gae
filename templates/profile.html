@@ -7,27 +7,29 @@
 
 {% block content %}
 
-	<p><a href="{{signout}}">Signout</a></p>
 	<h2 class="center">Create an RSS feed for your Trello boards, or any public boards</h2>
-
-	<h4 class="center">My Feeds</h4>
+	<br>
+	<div class="center">
+		<a id="enter" class="blue" href="/privatefeeds">Create a feed for my private boards</a></li>
+		<a id="enter" class="blue" href="/publicfeeds">Create a feed for a public board</a>
+	</div>
+	<br><br>
 	<hr>
+	<h3 class="center">My Feeds</h3>
 	{% if feeds %}
-		<ul>
+		<form method="post">
+			<table>
 		{% for feed in feeds %}
-			<li>
-				<a href="/feed/{{feed.key.id()}}">{{feed.channel_title}}</a>
-			</li>
+			<tr><td><input type="checkbox" name="{{feed.key.id()}}"></td>
+				<td><a href="/feed/{{feed.key.id()}}">{{feed.channel_title}}</a></td>
+			</tr>
 		{% endfor %}
-		</ul>
+			</table>
+			<input type="submit" name="delete" value="Delete Selected">
+			<input type="submit" name="modify" value="Modify Selected">
+		</form>
 	{% else %}
-		<p>You don't have any feeds setup yet. What would you like to do?</p>
-	{% endif %}
-	<hr>
-	<ul>
-		<li><a href="/privatefeeds">Create feeds for my private boards</a></li>
-		<li><a href="/publicfeeds">Create feeds for public boards</a></li>
-	</ul>
-	
+		<p>You don't have any feeds setup yet.</p>
+	{% endif %}	
 
 {% endblock content %}

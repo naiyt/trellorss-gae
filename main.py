@@ -19,14 +19,20 @@ import jinja2
 import os
 import re
 import logging
+import Cookie
+import os
 from lib import utils
 from lib import feeds
+from google.appengine.api import capabilities
 from google.appengine.api import users
 from datetime import datetime, timedelta
 from urllib import urlencode
+from lib import counters
 
 jinja_environment = jinja2.Environment(autoescape=True,
 	loader=jinja2.FileSystemLoader(os.path.join(os.path.dirname(__file__), 'templates')))
+
+signout = "/logout"
 
 class Handler(webapp2.RequestHandler):
 	"""Base class that handles writing and rendering (from Steve Huffman, CS 253)"""
@@ -42,10 +48,10 @@ class Handler(webapp2.RequestHandler):
 
 class MainHandler(Handler):
     def get(self):
+    	counters.pingpong_incr('hits')
     	user = users.get_current_user()
 
     	if user:
-    		signout = users.create_logout_url('/')
     		user_db = utils.get_user(user)
     		feeds = utils.get_feeds(user_db.feeds)
 
@@ -53,18 +59,44 @@ class MainHandler(Handler):
         else:
         	login_url = users.create_login_url(self.request.uri)
         	self.render('index.html', login=login_url)
+
+    def post(self):
+    	counters.pingpong_incr('hits')
+    	user = users.get_current_user()
+    	user_db = None
+    	if user:
+    		user_db = utils.get_user(user)
+    	else:
+    		self.redirect('/')
+    	args = self.request.arguments()
+    	feeds = []
+    	for arg in args:
+    		if arg != 'delete' and arg != 'modify':
+    			feeds.append(arg)
+    	delete = self.request.get('delete')
+    	modify = self.request.get('modify')
+    	if delete == '' and modify == '':
+    		self.redirect('/')
+    	if delete != '':
+    		utils.delete_feeds(feeds,user_db)
+    		self.redirect('/')
+    	elif modify != '':
+    		self.render('modify.html')
+
       
 
 class Public(Handler):
 	def get(self):
+		counters.pingpong_incr('hits')
 		user = users.get_current_user()
 		if user:
 			user_db = utils.get_user(user)
-			self.render('public.html',link="http://trello.com")
+			self.render('public.html',link="http://trello.com",signout=signout)
 		else:
 			self.redirect('/')
 
 	def post(self):
+		counters.pingpong_incr('hits')
 		user = users.get_current_user()
 		if not user:
 			self.redirect('/')
@@ -79,7 +111,7 @@ class Public(Handler):
 			lists = self.request.get('lists')
 	
 			if comments == '' and cards == '' and boards == '' and lists == '':
-				self.render('public.html',check_error=True)
+				self.render('public.html',check_error=True,signout=signout)
 			else:
 				actions = []
 				if comments != '':
@@ -93,12 +125,11 @@ class Public(Handler):
 				board_id, link, errors = utils.validate_input(board_id,link)
 		
 				if len(errors) > 0:
-					self.render('public.html',id=board_id,link=link,errors=errors)
+					self.render('public.html',id=board_id,link=link,errors=errors,signout=signout)
 				else:
 					feed_url = utils.create_feed(user,board_id,title,link,description,actions,
 						public_board=True,get_all=False,token=None)
-					self.render('congrats.html',feed_url=feed_url)
-
+					self.render('congrats.html',feed_url=feed_url,signout=signout)
 	
 
 class Authorize(Handler):
@@ -122,6 +153,7 @@ class TestBed(Handler):
 
 class Private(Handler):
 	def get(self):
+		counters.pingpong_incr('hits')
 		user = users.get_current_user()
 		if not user:
 			self.redirect('/')
@@ -139,11 +171,13 @@ class Private(Handler):
 			if auth_user:
 				args = {'response_type': 'token', 'key': utils.key, 'scope': 'read', 'expiration': '30days','name': 'TrelloRSS'}
 				auth_url = "https://trello.com/1/authorize?%s" % urlencode(args)
-				self.render('private.html', auth_url=auth_url)
+				self.render('private.html',auth_url=auth_url,signout=signout)
 			else:
-				self.render('private.html',user_boards=user_boards,link="http://trello.com")
+				self.render('private.html',user_boards=user_boards,link="http://trello.com",
+					title="My Trello RSS", description="My Trello RSS Feed",signout=signout)
 
 	def post(self):
+		counters.pingpong_incr('hits')
 		token = self.request.get('token')
 		user = users.get_current_user()
 		if not user:
@@ -165,26 +199,82 @@ class Private(Handler):
 			lists = self.request.get('lists')
 			actions = []
 			if comments == '' and cards == '' and boards == '' and lists == '':
-				logging.error('fdsfsd')
-				self.redirect('/privatefeeds')
-			if comments != '':
-				actions.append('comments')
-			if cards != '':
-				actions.append('cards')					
-			if boards != '':
-				actions.append('boards')					
-			if lists != '':
-				actions.append('lists')
-			get_all = False
-			if board == 'all':
-				get_all = True
-				board = None
-			feed_url = utils.create_feed(user,board,channel_title,channel_link,description,actions,
-				public_board=False,get_all=False,token=user_obj.auth_token)
-			self.render('congrats.html',feed_url=feed_url)
+				user_boards = None
+				if user_obj.token_expiration > datetime.now():
+					user_boards = utils.find_boards(user_obj)
+				self.render('private.html',check_error=True,user_boards=user_boards,link=channel_link,
+					description=description,title=channel_title,signout=signout)
+			else:
+				if comments != '':
+					actions.append('comments')
+				if cards != '':
+					actions.append('cards')					
+				if boards != '':
+					actions.append('boards')					
+				if lists != '':
+					actions.append('lists')
+				get_all = False
+				if board == 'all':
+					get_all = True
+					board = None
+				feed_url = utils.create_feed(user,board,channel_title,channel_link,description,actions,
+					public_board=False,get_all=False,token=user_obj.auth_token)
+				self.render('congrats.html',feed_url=feed_url,signout=signout)
 
-			
 
+
+class LogoutPage(Handler):
+	"""
+	Logout from this app only, not all of Google:
+	http://ptspts.blogspot.ca/2011/12/how-to-log-out-from-appengine-app-only.html
+
+	"""
+
+	def get(self):
+		target_url = self.request.referer or '/'
+		if os.environ.get('SERVER_SOFTWARE', '').startswith('Development/'):
+		  self.redirect(users.create_logout_url(target_url))
+		  return
+
+		# On the production instance, we just remove the session cookie, because
+		# redirecting users.create_logout_url(...) would log out of all Google
+		# (e.g. Gmail, Google Calendar).
+		#
+		# It seems that AppEngine is setting the ACSID cookie for http:// ,
+		# and the SACSID cookie for https:// . We just unset both below.
+		cookie = Cookie.SimpleCookie()
+		cookie['ACSID'] = ''
+		cookie['ACSID']['expires'] = -86400  # In the past, a day ago.
+		self.response.headers.add_header(*cookie.output().split(': ', 1))
+		cookie = Cookie.SimpleCookie()
+		cookie['SACSID'] = ''
+		cookie['SACSID']['expires'] = -86400
+		self.response.headers.add_header(*cookie.output().split(': ', 1))
+		self.redirect(target_url) 
+
+
+class UpdateStatsCron(Handler):
+
+  def update_counter(self, key_name):
+
+	# Checking memory cache
+	count = counters.pingpong_get(key_name, from_ping=False)
+	if not count:
+	  return
+
+	counter = counters.SimpleCounter.get_by_id(key_name)
+	if not counter:
+	  counter = counters.SimpleCounter(id=key_name, name=key_name, count=count)
+	else:
+	  counter.count += count
+	counter.put()
+	counters.pingpong_delete(key_name)
+
+  def get(self):
+
+	if capabilities.CapabilitySet('datastore_v3', capabilities=['write']).is_enabled() \
+		and capabilities.CapabilitySet('memcache').is_enabled():
+		self.update_counter('hits')
 
 
 FEED_RE = r'(.*)'
@@ -194,5 +284,7 @@ app = webapp2.WSGIApplication([
     ('/authorize', Authorize),
     ('/feed/' + FEED_RE, Feeds),
     ('/privatefeeds', Private),
-    ('/testbed', TestBed)
-], debug=True)
+    ('/logout', LogoutPage),
+    ('/testbed', TestBed),
+    ('/stats-update', UpdateStatsCron)
+], debug=False)

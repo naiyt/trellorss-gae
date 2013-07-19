@@ -19,18 +19,20 @@ function popitup(url) {
 {% block content %}
 
 	{% if auth_url %}
-		<p><a href="{{auth_url}}" onclick="return popitup('{{auth_url}}')">Click here to authorize Trello RSS to view you Trello boards.</a></p>
-
+		<br>
+		<h4><a href="{{auth_url}}" onclick="return popitup('{{auth_url}}')">Click here to authorize Trello RSS to view your Trello boards.</a></h4>
 		<p>A popup will ask you to authorize this app, and then provide you with a token. Please copy and paste that token here:</p>
 
 		<form method="post">
 			<input type="text" name="token">
 			<input type="submit" value="Enter Token">
 		</form>
-
+		<br>
 		<p>(Setting it up so that you don't have to copy and paste the token is on my to-do list.)</p>
 
-		<p>All this app does is convert your Trello data into an RSS feed and display it for a feed reader. However, if you have private data you probably don't want to create a feed for it, since once you've made that feed that data is publicly available (until you de-authorize the app, or delete the feed).</p>
+		<p><strong>A note on privacy:</strong> The token will give permission for this app to read your Trello boards for 30 days (or until you revoke its access). All it does is query the API for new actions on your boards every 30 minutes, and create an RSS feed for it. No data from your boards is stored permanently -- it's all stored in memcache, and it's cleared every 30 minutes so that new updates can be cached.</p>
+		<p>This app won't do anything evil with your data, but please not that once you've put up a feed, that feed is publicly accessible to anyone with the url! Thus, if you have any boards with potentially confidential info, I recommend agains creating an RSS feed for it here.</p>
+		<p>Or if you prefer, you can even grab the <a href="https://github.com/naiyt/trellorss-gae">source</a> for this app, and host it on your own Google App Engine instance.</p>
 
 	{% else %}
 	<h1>Your Boards</h1>
@@ -47,14 +49,14 @@ function popitup(url) {
 			<tr><td></td></tr>
 			<tr><th>Now, enter your channel details</th></tr>
 			<tr>
-			<td>Chanel Title</td><td><input type="text" name="title" value="My Trello RSS" maxlength="150" 	required></td>
+			<td>Chanel Title</td><td><input type="text" name="title" value="{{title}}" maxlength="150" 	required></td>
 			</tr>
 	
 			<tr><td>Channel Link</td><td><input type="text" name="link" value="{{link}}" maxlength="150" required>
 				{% if 'link' in errors %}<span class="error">Enter a valid URL</apn>{% endif %}</td>
 			</tr>
 	
-			<tr><td>Channel Description<td><textarea name="description" rows="4" cols="50">My Trello RSS feed</textarea></td>
+			<tr><td>Channel Description<td><textarea name="description" rows="4" cols="50">{{description}}</textarea></td>
 			</tr>
 
 			<tr>
@@ -69,7 +71,7 @@ function popitup(url) {
 				</td>
 
 			{% else %}
-				<p>I couldn't find any board on your Trello account...</p>
+				<p>I couldn't find any boards on your Trello account...</p>
 
 			{% endif %}
 

@@ -30,6 +30,7 @@ from trello import TrelloClient
 from trello import ResourceUnavailable
 from recent import Recent
 import sys
+import logging
 
 class Channel:
 	"""Used to create the RSS channel object"""
@@ -161,10 +162,11 @@ class TrelloRSS:
 		for item in all_items:
 			for entity in item:
 				if 'memberCreator' not in entity:
-					entity = entity['actions']
-					for sub in entity:					
-						curr_item = self._create_item(sub,item,my_updates)
-						item_objs.append(curr_item)
+					if 'actions' in entity:
+						entity = entity['actions']
+						for sub in entity:					
+							curr_item = self._create_item(sub,item,my_updates)
+							item_objs.append(curr_item)
 				else:
 					curr_item = self._create_item(entity,item,my_updates)
 					item_objs.append(curr_item)
