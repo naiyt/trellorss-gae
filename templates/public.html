@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block head %}
+	{{ super() }}
+	<title>Trello RSS Feed Generator</title>
+
+{% endblock %}
+
+{% block content %}
+
+	<h3 class="center">Please enter the following information to create your Feed</h3>
+	<form method="post">
+		<table>
+			<tr>
+			<td>Enter the board's ID or URL:</td><td><input type="text" name="board" maxlength="150" value="{{id}}" required>
+				{% if 'iderror' in errors %}<span class="error">Enter a valid ID</span>{% endif %}
+				</label></td>
+			</tr>
+			<tr>
+			<td>Chanel Title</td><td><input type="text" name="title" value="My Trello RSS" maxlength="150" 	required></td>
+			</tr>
+	
+			<tr><td>Channel Link</td><td><input type="text" name="link" value="{{link}}" maxlength="150" required>
+				{% if 'link' in errors %}<span class="error">Enter a valid URL</apn>{% endif %}</td>
+			</tr>
+	
+			<tr><td>Channel Description<td><textarea name="description" rows="4" cols="50">My Trello RSS feed</textarea></td>
+			</tr>
+
+			<tr>
+				<td>What actions would you like to follow?{% if check_error %}<br><span class="error">Please check at least one.</span>{% endif %}</td>
+				<td>
+					<ul>
+						<label><input type="checkbox" name="comments"> Comments</label><br>
+						<label><input type="checkbox" name="cards"> Created Cards</label><br>
+						<label><input type="checkbox" name="boards"> Created Boards</label><br>
+						<label><input type="checkbox" name="lists"> Created Lists</label><br>
+					</ul>
+				</td>
+
+			</tr>
+		</table>
+		<input type="submit" class="blue" id="enter" value="Create my feed!">
+	</form>
+
+	
+
+{% endblock content %}

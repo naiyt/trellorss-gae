@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block head %}
+	{{ super() }}
+	<title>Trello RSS Feed Generator</title>
+
+{% endblock %}
+
+{% block content %}
+
+	<p><a href="{{signout}}">Signout</a></p>
+	<h2 class="center">Create an RSS feed for your Trello boards, or any public boards</h2>
+
+	<h4 class="center">My Feeds</h4>
+	<hr>
+	{% if feeds %}
+		<ul>
+		{% for feed in feeds %}
+			<li>
+				<a href="/feed/{{feed.key.id()}}">{{feed.channel_title}}</a>
+			</li>
+		{% endfor %}
+		</ul>
+	{% else %}
+		<p>You don't have any feeds setup yet. What would you like to do?</p>
+	{% endif %}
+	<hr>
+	<ul>
+		<li><a href="/privatefeeds">Create feeds for my private boards</a></li>
+		<li><a href="/publicfeeds">Create feeds for public boards</a></li>
+	</ul>
+	
+
+{% endblock content %}

@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block head %}
+	{{ super() }}
+	<title>Trello RSS Feed Generator</title>
+
+<script language="javascript" type="text/javascript">
+<!--
+function popitup(url) {
+	newwindow=window.open(url,'name','height=600,width=600');
+	if (window.focus) {newwindow.focus()}
+	return false;
+}
+
+// -->
+</script>
+
+{% endblock %}
+
+{% block content %}
+
+	{% if auth_url %}
+		<p><a href="{{auth_url}}" onclick="return popitup('{{auth_url}}')">Click here to authorize Trello RSS to view you Trello boards.</a></p>
+
+		<p>A popup will ask you to authorize this app, and then provide you with a token. Please copy and paste that token here:</p>
+
+		<form method="post">
+			<input type="text" name="token">
+			<input type="submit" value="Enter Token">
+		</form>
+
+		<p>(Setting it up so that you don't have to copy and paste the token is on my to-do list.)</p>
+
+		<p>All this app does is convert your Trello data into an RSS feed and display it for a feed reader. However, if you have private data you probably don't want to create a feed for it, since once you've made that feed that data is publicly available (until you de-authorize the app, or delete the feed).</p>
+
+	{% else %}
+	<h1>Your Boards</h1>
+	<form method="post">
+		<table>
+			{% if user_boards %}
+				<h2>Choose what board to make a feed from</h2>
+				<tr><td><label><input type="radio" name="board" value="all" checked> All Boards</label></td></tr>
+				{% for board in user_boards %}
+					<tr><td><label><input type="radio" name="board" value="{{board}}">				
+						{{user_boards[board]}}
+					</label></td></tr>
+				{% endfor %}
+			<tr><td></td></tr>
+			<tr><th>Now, enter your channel details</th></tr>
+			<tr>
+			<td>Chanel Title</td><td><input type="text" name="title" value="My Trello RSS" maxlength="150" 	required></td>
+			</tr>
+	
+			<tr><td>Channel Link</td><td><input type="text" name="link" value="{{link}}" maxlength="150" required>
+				{% if 'link' in errors %}<span class="error">Enter a valid URL</apn>{% endif %}</td>
+			</tr>
+	
+			<tr><td>Channel Description<td><textarea name="description" rows="4" cols="50">My Trello RSS feed</textarea></td>
+			</tr>
+
+			<tr>
+				<td>What actions would you like to follow?{% if check_error %}<br><span class="error">Please check at least one.</span>{% endif %}</td>
+				<td>
+					<ul>
+						<label><input type="checkbox" name="comments"> Comments</label><br>
+						<label><input type="checkbox" name="cards"> Created Cards</label><br>
+						<label><input type="checkbox" name="boards"> Created Boards</label><br>
+						<label><input type="checkbox" name="lists"> Created Lists</label><br>
+					</ul>
+				</td>
+
+			{% else %}
+				<p>I couldn't find any board on your Trello account...</p>
+
+			{% endif %}
+
+			</table>
+			<input type="submit" class="blue" id="enter" value="Create my feed!">
+		</form>
+
+	{% endif %}
+	
+	
+{% endblock content %}
