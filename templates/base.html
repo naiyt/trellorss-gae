@@ -3,33 +3,38 @@
 
 	<head>
 		{% block head %}
-		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<link href="/style/bootstrap.min.css" rel="stylesheet" media="screen">
+		<link href="/style/style.css" rel="stylesheet" media="screen">
 		<meta name="description" content="Generate RSS feeds for your Trello Boards">
 		<meta name="keywords" content="Trello, RSS" />
-		<link href="/style/style.css" rel="stylesheet" type="text/css" />
 		{% endblock %}
 	</head>
 	<body>
-		<div class="wrapper">
-			<p><a href="/">Home</a>
-			{% if signout %}
-				<a href="{{signout}}">Signout</a>
-			{% endif %}
-			</p>
-
-			<div class="main">
-			{% block content %}{% endblock content %}
+		<div id="wrap">
+			<div class="container">
+				<p><a href="/">Home</a>
+				{% if signout %}
+					- <a href="{{signout}}">Signout</a>
+				{% endif %}
+				</p>
+	
+				{% block content %}{% endblock content %}
+	
+				{% block footer %}
+				<div id="push"></div>
 			</div>
+		</div>
 
-			{% block footer %}
-			<div class="push"></div>
+		<div id="footer">
+			<div class="container">
+				<hr class="footer">
+				Created using <a href="https://github.com/sarumont/py-trello">Py-Trello</a>, <a href="	https://github.com/naiyt/trello-rss">Trello-RSS</a>, and <a href="https://pypi.python.	org/pypi/PyRSS2Gen/1.1">PyRSS2Gen</a> by <a href="http://natecollings.com">Nate Collings</a><br>
+				Source on <a href="https://github.com/naiyt/trellorss-gae">GitHub</a> -
+				Report issues or desired features on GitHub or <a href="https://trello.com/b/vPyyk1Ut/trello-rss">	this Trello Board</a>
+			</div>
 		</div>
-		<div class="footer">
-			<hr>
-			<p class="center">Created using <a href="https://github.com/sarumont/py-trello">Py-Trello</a>, <a href="https://github.com/naiyt/trello-rss">Trello-RSS</a>, and <a href="https://pypi.python.org/pypi/PyRSS2Gen/1.1">PyRSS2Gen</a> by <a href="http://natecollings.com">Nate Collings</a><br>
-			Source on <a href="https://github.com/naiyt/trellorss-gae">GitHub</a> -
-			Report issues or desired features on GitHub or <a href="https://trello.com/b/vPyyk1Ut/trello-rss">this Trello Board</a>
-		</div>
+	</div>
 	</body>
 </html>
 		{% endblock %}

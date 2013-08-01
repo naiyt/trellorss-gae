@@ -35,11 +35,11 @@ function popitup(url) {
 		<p>Or if you prefer, you can even grab the <a href="https://github.com/naiyt/trellorss-gae">source</a> for this app, and host it on your own Google App Engine instance.</p>
 
 	{% else %}
-	<h1>Your Boards</h1>
 	<form method="post">
 		<table>
 			{% if user_boards %}
 				<h2>Choose what board to make a feed from</h2>
+				<hr>
 				<tr><td><label><input type="radio" name="board" value="all" checked> All Boards</label></td></tr>
 				{% for board in user_boards %}
 					<tr><td><label><input type="radio" name="board" value="{{board}}">				
@@ -76,7 +76,7 @@ function popitup(url) {
 			{% endif %}
 
 			</table>
-			<input type="submit" class="blue" id="enter" value="Create my feed!">
+			<input type="submit" value="Create my feed!">
 		</form>
 
 	{% endif %}

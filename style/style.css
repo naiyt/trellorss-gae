@@ -1,74 +1,52 @@
-.center { text-align: center; }
+/* Overrides for default Bootstrap elements */
 
-.error { color: red; }
-
-#enter.blue {
-	background-color: #1874cd;
-	background-image: -webkit-gradient(linear, left top, left bottom, from(#4f9eea), to(#1874cd));
-	background-image: -webkit-linear-gradient(top, #4f9eea, #1874cd);
-	background-image: -moz-linear-gradient(top, #4f9eea, #1874cd);
-	background-image: -ms-linear-gradient(top, #4f9eea, #1874cd);
-	background-image: -o-linear-gradient(top, #4f9eea, #1874cd);
-	background-image: linear-gradient(top, #4f9eea, #1874cd);
-	border: 1px solid #115290;
-	color: #fff;
-    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#4f9eea, endColorstr=#1874cd);
-	text-shadow: 0 1px 0 #115290;
+@media {
+	.container {
+		max-width: 820px;
+	}
 }
 
-#enter.blue:hover {
-	background-color: #7db7f0;
-	background-image: -webkit-gradient(linear, left top, left bottom, from(#7db7f0), to(#1874cd));
-	background-image: -webkit-linear-gradient(top, #7db7f0, #1874cd);
-	background-image: -moz-linear-gradient(top, #7db7f0, #1874cd);
-	background-image: -ms-linear-gradient(top, #7db7f0, #1874cd);
-	background-image: -o-linear-gradient(top, #7db7f0, #1874cd);
-	background-image: linear-gradient(top, #7db7f0, #1874cd);
-	border: 1px solid #115290;
-	color: #fff;
-    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#7db7f0, endColorstr=#1874cd);
-	text-shadow: 0 1px 0 #115290;
+/* Sticky footer styles
+-------------------------------------------------- */
+
+html,
+body {
+  height: 100%;
+  /* The html and body elements cannot have any padding or margin. */
 }
 
-#enter {
-	font-size: 18px;
-	padding: 5px 10px;
-	text-decoration: none;
+/* Wrapper for page content to push down footer */
+#wrap {
+  min-height: 100%;
+  height: auto !important;
+  height: 100%;
+  /* Negative indent footer by it's height */
+  margin: 0 auto -45px;
 }
 
-input[type=text]
-{
-	border: 1px solid #ccc;
-	border-radius: 3px;
-	box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);
-	min-height: 28px;
-	padding: 4px 20px 4px 8px;
-	font-size: 15px;
-	-moz-transition: all .2s linear;
-	-webkit-transition: all .2s linear;
-	transition: all .2s linear;
-	width: 200px;
+/* Set the fixed height of the footer here */
+#push,
+#footer {
+  height: 45px;
+}
+#footer {
+  text-align: center;
 }
 
-* {
-	margin: 0px;
+/* Lastly, apply responsive CSS fixes as necessary */
+@media (max-width: 820px) {
+  #footer {
+    margin-left: -20px;
+    margin-right: -20px;
+    padding-left: 20px;
+    padding-right: 20px;
+  }
 }
 
-p {
-	margin-top: 8px;
-	margin-bottom: 8px;
+hr.footer {
+	margin: 2px;
 }
 
-html, body {
-	height: 99%;
-	margin: 8px;
-}
-.wrapper {
-	min-height: 100%;
-	height: auto !important;
-	height: 100%;
-	margin: 0 auto -4em;
-}
-.footer, .push {
-	height: 4em;
+.error {
+	color: red;
 }

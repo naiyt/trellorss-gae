@@ -7,15 +7,15 @@
 
 {% block content %}
 
-	<h2 class="center">Create an RSS feed for your Trello boards, or any public boards</h2>
-	<br>
-	<div class="center">
-		<a id="enter" class="blue" href="/privatefeeds">Create a feed for my private boards</a></li>
-		<a id="enter" class="blue" href="/publicfeeds">Create a feed for a public board</a>
-	</div>
-	<br><br>
+	<h2>Create an RSS feed for your Trello boards</h2>
 	<hr>
-	<h3 class="center">My Feeds</h3>
+		<ul>
+			<li><a href="/privatefeeds">Create a feed for my private boards</a></li>
+			<li><a href="/publicfeeds">Create a feed for a public board</a></li>
+		</ul>
+	<br>
+	<h3>My Feeds</h3>
+	<hr>
 	{% if feeds %}
 		<form method="post">
 			<table>
