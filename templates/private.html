@@ -22,7 +22,9 @@ function popitup(url) {
 		<br>
 		<h4><a href="{{auth_url}}" onclick="return popitup('{{auth_url}}')">Click here to authorize Trello RSS to view your Trello boards.</a></h4>
 		<p>A popup will ask you to authorize this app, and then provide you with a token. Please copy and paste that token here:</p>
-
+		{% if incorrect_token %}
+			<p class="text-danger">Ack! That token doesn't appear to be right. Care to try again?</p>
+		{% endif %}
 		<form method="post">
 			<input type="text" name="token">
 			<input type="submit" value="Enter Token">

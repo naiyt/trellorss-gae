@@ -178,11 +178,16 @@ class Private(Handler):
         if not user:
             self.redirect('/')
         user_obj = utils.get_user(user)
-        if token:   
-            user_obj.auth_token = token
-            user_obj.token_expiration = datetime.now() + timedelta(days=30)
-            user_obj.put()
-            self.redirect('/privatefeeds')
+        if token:
+            if(utils.verify_token(token)):
+                user_obj.auth_token = token
+                user_obj.token_expiration = datetime.now() + timedelta(days=30)
+                user_obj.put()
+                self.redirect('/privatefeeds')
+            else:
+                args = {'response_type': 'token', 'key': utils.key, 'scope': 'read', 'expiration': '30days','name': 'TrelloRSS'}
+                auth_url = "https://trello.com/1/authorize?%s" % urlencode(args)
+                self.render('private.html',incorrect_token=True,auth_url=auth_url,signout=signout)
         else:
             board = self.request.get('board')
             channel_title = self.request.get('title')
