@@ -3,6 +3,7 @@ import logging
 from models import Users, Feed
 from trellorss.trellorss import TrelloRSS
 from trellorss.trello import TrelloClient
+from trellorss.trello import Unauthorized
 from trellorss.trello import ResourceUnavailable
 from google.appengine.ext import ndb
 from google.appengine.api import memcache
@@ -14,6 +15,15 @@ def get_user(user):
 		user_db = Users(id=user.user_id(),email=user.email())
 		user_db.put()
 	return user_db
+
+def verify_token(token):
+	trell = TrelloClient(key, token)
+	try:
+		boards = trell.list_boards()
+	except Unauthorized:
+		return False
+	return True
+
 
 def get_feeds(feeds):
 		feeds = ndb.get_multi(feeds)

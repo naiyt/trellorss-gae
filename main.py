@@ -111,7 +111,7 @@ class Public(Handler):
             lists = self.request.get('lists')
             checklists = self.request.get('checklists')
     
-            if comments == '' and cards == '' and boards == '' and lists == '':
+            if comments == '' and cards == '' and boards == '' and lists == '' and checklists == '':
                 self.render('public.html',check_error=True,signout=signout)
             else:
                 actions = []
@@ -200,7 +200,7 @@ class Private(Handler):
             checklists = self.request.get('checklists')
 
             actions = []
-            if comments == '' and cards == '' and boards == '' and lists == '':
+            if comments == '' and cards == '' and boards == '' and lists == '' and checklists == '':
                 user_boards = None
                 if user_obj.token_expiration > datetime.now():
                     user_boards = utils.find_boards(user_obj)
