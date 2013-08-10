@@ -104,7 +104,7 @@ def get_feed(feed_id):
 					rss.get_from(feed.board_id,public_board=feed.public_board,items=feed.actions)
 				else:
 					rss.get_from(feed.board_id,public_board=feed.public_board)
-			xml = rss.rss.to_xml()
+			xml = rss.rss
 			memcache.add(key=feed_id, value=xml, time=1800)
 	return xml
 		
