@@ -9,24 +9,25 @@
 
 	<h2>Create an RSS feed for your Trello boards</h2>
 	<hr>
-		<ul>
-			<li><a href="/privatefeeds">Create a feed for my private boards</a></li>
-			<li><a href="/publicfeeds">Create a feed for a public board</a></li>
-		</ul>
+		<a class="btn btn-lg btn-primary" href="/privatefeeds">Create a feed for my private boards</a>
+		<a class="btn btn-lg btn-primary" href="/privatefeeds">Create a feed for a public board</a>
 	<br>
 	<h3>My Feeds</h3>
-	<hr>
 	{% if feeds %}
-		<form method="post">
-			<table>
-		{% for feed in feeds %}
-			<tr><td><input type="checkbox" name="{{feed.key.id()}}"></td>
-				<td><a href="/feed/{{feed.key.id()}}">{{feed.channel_title}}</a></td>
-			</tr>
-		{% endfor %}
-			</table>
-			<input type="submit" name="delete" value="Delete Selected">
-			<input type="submit" name="modify" value="Modify Selected">
+
+		<form method="post" class="form-inline">
+			<div class="form-group">
+				<table class="table table-hover">
+			{% for feed in feeds %}
+				<tr><td class="check"><input type="checkbox" name="{{feed.key.id()}}" id="check_{{feed.key.id()}}"></td>
+					<td><label for="check_{{feed.key.id()}}"><a href="/feed/{{feed.key.id()}}">{{feed.channel_title}}</a></label></td>
+				</tr>
+			{% endfor %}
+				</table>
+				
+				<button class="btn btn-default" type="submit" name="delete" value="delete">Delete Selected</button>
+				<button class="btn btn-default" type="submit" name="modify" value="delete">Modify Selected</button>
+			</div>
 		</form>
 	{% else %}
 		<p>You don't have any feeds setup yet.</p>

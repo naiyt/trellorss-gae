@@ -318,6 +318,27 @@ class Reauth(Handler):
         else:
             self.redirect('/')
 
+class FixFeeds(Handler):
+    """
+    I changed the schema up a bit, adding a users property to feeds. Previously I was snagging the token
+    to be used for a private board from a property on the feed itself; this make it troublesome when
+    updating tokens. Now, the feed will have a user key property, and will grab the token from the 
+    user entity instead. Using this Handler to fix all of the feeds currently up and running.
+
+    """
+
+    def get(self):
+        from lib.models import Users
+        users = Users.query()
+        for user in users.iter():
+            feeds = utils.get_feeds(user.feeds)
+            feeds = [x for x in feeds if x.public_board is False]
+            for feed in feeds:
+                feed.user = user.key
+                feed.put()
+        self.write("Success")
+
+
 
 FEED_RE = r'(.*)'
 app = webapp2.WSGIApplication([
@@ -328,5 +349,6 @@ app = webapp2.WSGIApplication([
     ('/logout', LogoutPage),
     ('/testbed', TestBed),
     ('/stats-update', UpdateStatsCron),
-    ('/reauth', Reauth)
+    ('/reauth', Reauth),
+    ('/fix-feeds', FixFeeds)
 ], debug=False)
