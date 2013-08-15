@@ -54,8 +54,14 @@ class MainHandler(Handler):
         if user:
             user_db = utils.get_user(user)
             feeds = utils.get_feeds(user_db.feeds)
+            if user_db.auth_token:
+                if(utils.verify_token(user_db.auth_token)):
+                    self.render('profile.html', signout=signout,feeds=feeds)
+                else:
+                    self.redirect('/reauth')
+            else:
+                self.render('profile.html', signout=signout,feeds=feeds)
 
-            self.render('profile.html', signout=signout,feeds=feeds)
         else:
             login_url = users.create_login_url(self.request.uri)
             self.render('index.html', login=login_url)
@@ -157,10 +163,7 @@ class Private(Handler):
             auth_user = False
             user_boards = None
             if user.auth_token:
-                if user.token_expiration > datetime.now():
-                    user_boards = utils.find_boards(user)
-                else:
-                    auth_user = True
+                user_boards = utils.find_boards(user)
             else:
                 auth_user = True
             if auth_user:
@@ -181,11 +184,10 @@ class Private(Handler):
         if token:
             if(utils.verify_token(token)):
                 user_obj.auth_token = token
-                user_obj.token_expiration = datetime.now() + timedelta(days=30)
                 user_obj.put()
                 self.redirect('/privatefeeds')
             else:
-                args = {'response_type': 'token', 'key': utils.key, 'scope': 'read', 'expiration': '30days','name': 'TrelloRSS'}
+                args = {'response_type': 'token', 'key': utils.key, 'scope': 'read', 'expiration': 'never','name': 'TrelloRSS'}
                 auth_url = "https://trello.com/1/authorize?%s" % urlencode(args)
                 self.render('private.html',incorrect_token=True,auth_url=auth_url,signout=signout)
         else:
@@ -202,8 +204,7 @@ class Private(Handler):
             actions = []
             if comments == '' and cards == '' and boards == '' and lists == '' and checklists == '':
                 user_boards = None
-                if user_obj.token_expiration > datetime.now():
-                    user_boards = utils.find_boards(user_obj)
+                user_boards = utils.find_boards(user_obj)
                 self.render('private.html',check_error=True,user_boards=user_boards,link=channel_link,
                     description=description,title=channel_title,signout=signout)
             else:
@@ -282,6 +283,43 @@ class UpdateStatsCron(Handler):
         self.update_counter('hits')
 
 
+class Reauth(Handler):
+    """When a token expires or was revoked, this is used to reauthorizes said user"""
+
+    def get(self):
+        counters.pingpong_incr('hits')
+        user = users.get_current_user()
+        if not user:
+            self.redirect('/')
+        else:
+            user = utils.get_user(user)
+            if(utils.verify_token(user.auth_token)):
+                self.redirect('/')
+            else:
+                args = {'response_type': 'token', 'key': utils.key, 'scope': 'read', 'expiration': 'never','name': 'TrelloRSS'}
+                auth_url = "https://trello.com/1/authorize?%s" % urlencode(args)
+                self.render('reauth.html',auth_url=auth_url,signout=signout)
+
+    def post(self):
+        counters.pingpong_incr('hits')
+        token = self.request.get('token')
+        user = users.get_current_user()
+        if not user:
+            self.redirect('/')
+        user_obj = utils.get_user(user)
+        if token:
+            if(utils.verify_token(token)):
+                user_obj.auth_token = token
+                user_obj.put()
+                self.redirect('/')
+            else:
+                args = {'response_type': 'token', 'key': utils.key, 'scope': 'read', 'expiration': 'never','name': 'TrelloRSS'}
+                auth_url = "https://trello.com/1/authorize?%s" % urlencode(args)
+                self.render('reauth.html',incorrect_token=True,auth_url=auth_url,signout=signout)
+        else:
+            self.redirect('/')
+
+
 FEED_RE = r'(.*)'
 app = webapp2.WSGIApplication([
     ('/', MainHandler),
@@ -290,5 +328,6 @@ app = webapp2.WSGIApplication([
     ('/privatefeeds', Private),
     ('/logout', LogoutPage),
     ('/testbed', TestBed),
-    ('/stats-update', UpdateStatsCron)
+    ('/stats-update', UpdateStatsCron),
+    ('/reauth', Reauth)
 ], debug=False)

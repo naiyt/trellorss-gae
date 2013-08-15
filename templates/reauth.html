@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block head %}
+	{{ super() }}
+	<title>Trello RSS Feed Generator</title>
+
+<script language="javascript" type="text/javascript">
+<!--
+function popitup(url) {
+	newwindow=window.open(url,'name','height=600,width=600');
+	if (window.focus) {newwindow.focus()}
+	return false;
+}
+
+// -->
+</script>
+
+{% endblock %}
+
+{% block content %}
+	
+	<h2 class="text-center">Your Trello Auth token has recently expired or was revoked! To continue viewing feeds for your Trello boards, please enter your token below.</h2>
+	<h4 class="text-center">Going forward, Trello RSS generates a read-only token that doesn't expire. If you decide you no longer want this app to have read access to your Trello account, you can simply revoke access in your Trello account settings.</h4>
+
+		<h3 class="text-center"><a href="{{auth_url}}" onclick="return popitup('{{auth_url}}')">Click here to authorize Trello RSS to view your Trello boards.</a></h3>
+		<p>A popup will ask you to authorize this app, and then provide you with a token. Please copy and paste that token here:</p>
+		{% if incorrect_token %}
+			<p class="text-danger">Ack! That token doesn't appear to be right. Care to try again?</p>
+		{% endif %}
+		<form method="post">
+			<input type="text" name="token">
+			<input type="submit" value="Enter Token">
+		</form>
+	
+{% endblock content %}
