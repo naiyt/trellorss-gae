@@ -10,6 +10,7 @@ class Feed(ndb.Model):
 	get_all = ndb.BooleanProperty(default=False) # True if getting all private boards
 	board_id = ndb.StringProperty() # Used if get_all is false
 	public_board = ndb.BooleanProperty(default=False)
+	user = ndb.KeyProperty()
 
 class Users(ndb.Model):
 	email = ndb.StringProperty()

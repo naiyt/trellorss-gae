@@ -282,7 +282,6 @@ class UpdateStatsCron(Handler):
         and capabilities.CapabilitySet('memcache').is_enabled():
         self.update_counter('hits')
 
-
 class Reauth(Handler):
     """When a token expires or was revoked, this is used to reauthorizes said user"""
 
