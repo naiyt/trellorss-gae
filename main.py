@@ -164,7 +164,7 @@ class Private(Handler):
             else:
                 auth_user = True
             if auth_user:
-                args = {'response_type': 'token', 'key': utils.key, 'scope': 'read', 'expiration': '30days','name': 'TrelloRSS'}
+                args = {'response_type': 'token', 'key': utils.key, 'scope': 'read', 'expiration': 'never','name': 'TrelloRSS'}
                 auth_url = "https://trello.com/1/authorize?%s" % urlencode(args)
                 self.render('private.html',auth_url=auth_url,signout=signout)
             else:
