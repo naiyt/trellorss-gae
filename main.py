@@ -224,7 +224,7 @@ class Private(Handler):
                     get_all = True
                     board = None
                 feed_url = utils.create_feed(user,board,channel_title,channel_link,description,actions,
-                    public_board=False,get_all=False,token=user_obj.auth_token)
+                    public_board=False,get_all=get_all,token=user_obj.auth_token)
                 self.render('congrats.html',feed_url=feed_url,signout=signout)
 
 

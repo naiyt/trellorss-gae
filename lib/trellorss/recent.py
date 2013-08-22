@@ -83,7 +83,7 @@ class Recent:
 		Calls the list_boards() function if we haven't alreadyi
 
 		"""
-		if self.board_id and self.public_board:
+		if self.board_id:
 			self.boards = self.trell.get_board(self.board_id)
 
 		elif self.boards is None:

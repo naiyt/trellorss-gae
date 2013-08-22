@@ -24,6 +24,7 @@ https://trello.com/docs/gettingstarted/index.html#getting-a-token-from-a-user
 import datetime
 import config
 import PyRSS2Gen
+import logging
 from trello import TrelloClient
 from recent import Recent
 import sys
@@ -145,11 +146,12 @@ class TrelloRSS:
         -Better url building
     
         """
+
         if items is None:
             items = self.all_items
         
         if self.token and public_board is False:
-            my_updates = Recent(self.key,self.token,all_private=all_private)
+            my_updates = Recent(self.key,self.token,all_private=all_private,board_id=board_id)
         else:
             my_updates = Recent(self.key,board_id=board_id,public_board=public_board)
 
