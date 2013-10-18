@@ -110,7 +110,6 @@ def get_feed(feed_id):
                 user = feed.user.get()
                 rss = TrelloRSS(key,token=user.auth_token,channel_title=feed.channel_title,
                     rss_channel_link=feed.channel_link,description=feed.channel_description)
-            logging.error(feed.get_all)
             if feed.get_all:
                 if feed.actions:
                     rss.get_all(items=feed.actions)
