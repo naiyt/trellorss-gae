@@ -40,6 +40,15 @@ class Handler(webapp2.RequestHandler):
         self.response.out.write(*a, **kw)
 
     def render_str(self, template, ** params):
+        for key in params: # Make sure we're properly utf-8 encoded
+                           # This is kind of nasty, but I didn't properly make sure everything was encoded
+                           # from the get go, so this is the easiest way to make sure everything gets printed correctly
+            if(isinstance(params[key], str)):
+                params[key] = params[key].decode('utf-8')
+            if(isinstance(params[key], dict)):
+                for sub_key in params[key]:
+                    if(isinstance(params[key][sub_key], str)):
+                        params[key][sub_key] = params[key][sub_key].decode('utf-8')
         t = jinja_environment.get_template(template)
         return t.render(params)
 
