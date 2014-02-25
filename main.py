@@ -1,117 +1,88 @@
-#!/usr/bin/env python
-#
-# Copyright 2007 Google Inc.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#
 import webapp2
-import jinja2
 import os
-import re
 import logging
 import Cookie
-import os
 from lib import utils
-from lib import feeds
 from google.appengine.api import capabilities
 from google.appengine.api import users
-from datetime import datetime, timedelta
 from urllib import urlencode
 from lib import counters
+from lib import constants
 
-jinja_environment = jinja2.Environment(autoescape=True,
-    loader=jinja2.FileSystemLoader(os.path.join(os.path.dirname(__file__), 'templates')))
-
-signout = "/logout"
 
 class Handler(webapp2.RequestHandler):
-    """Base class that handles writing and rendering (from Steve Huffman, CS 253)"""
+    """ Base class to handle template rendering. """
+
     def write(self, *a, **kw):
+        """ Just write plain text to the screen """
         self.response.out.write(*a, **kw)
 
-    def render_str(self, template, ** params):
-        for key in params: # Make sure we're properly utf-8 encoded
-                           # This is kind of nasty, but I didn't properly make sure everything was encoded
-                           # from the get go, so this is the easiest way to make sure everything gets printed correctly
+    def _render_str(self, template, ** params):
+        """
+        Render the actual template; there was a bug with text not being properly
+        utf-8 encoded that I'm fixing quickly here. Need to find a more elegant solution;
+        not sure of the performance hit of doing it this way.
+
+        """
+
+        for key in params:
             if(isinstance(params[key], str)):
                 params[key] = params[key].decode('utf-8')
             if(isinstance(params[key], dict)):
                 for sub_key in params[key]:
                     if(isinstance(params[key][sub_key], str)):
                         params[key][sub_key] = params[key][sub_key].decode('utf-8')
-        t = jinja_environment.get_template(template)
+        t = constants.JINJA_ENV.get_template(template)
         return t.render(params)
 
     def render(self, template, **kw):
-        self.write(self.render_str(template, **kw))
+        """ Render a template, with **kw to be passed to Jinja """
+        self.write(self._render_str(template, **kw))
+
 
 class MainHandler(Handler):
+    """ Handles / """
+
     def get(self):
-        counters.pingpong_incr('hits')
         user = users.get_current_user()
-
         if user:
-            user_db = utils.get_user(user)
-            feeds = utils.get_feeds(user_db.feeds)
-            if user_db.auth_token:
-                if(utils.verify_token(user_db.auth_token)):
-                    self.render('profile.html', signout=signout,feeds=feeds)
-                else:
+            user_obj = utils.get_user(user)
+            feeds = utils.get_feeds(user_obj.feeds)
+            if user_obj.auth_token: # User has an auth token
+                if(utils.verify_token(user_obj.auth_token)): # User's auth token is valid
+                    self.render('profile.html', signout=constants.SIGNOUT,feeds=feeds)
+                else: # User's auth token is out of date
                     self.redirect('/reauth')
-            else:
-                self.render('profile.html', signout=signout,feeds=feeds)
-
+            else: # User has no auth token
+                self.render('profile.html', signout=constants.SIGNOUT,feeds=feeds)
         else:
             login_url = users.create_login_url(self.request.uri)
             self.render('index.html', login=login_url)
 
     def post(self):
-        counters.pingpong_incr('hits')
+        """ Posts to this page handle feed deletions """
         user = users.get_current_user()
-        user_db = None
         if user:
-            user_db = utils.get_user(user)
-        else:
-            self.redirect('/')
-        args = self.request.arguments()
-        feeds = []
-        for arg in args:
-            if arg != 'delete' and arg != 'modify':
-                feeds.append(arg)
-        delete = self.request.get('delete')
-        modify = self.request.get('modify')
-        if delete == '' and modify == '':
-            self.redirect('/')
-        if delete != '':
-            utils.delete_feeds(feeds,user_db)
-            self.redirect('/')
-        elif modify != '':
-            self.render('modify.html')
-
+            user_obj = utils.get_user(user)
+            args = self.request.arguments()
+            feeds = [x for x in args if x != 'delete' and x != 'modify']
+            delete = self.request.get('delete')
+            if delete:
+                utils.delete_feeds(feeds, user_obj)
+        self.redirect('/')
       
 
 class Public(Handler):
+    """ Handles /publicfeeds """
+
     def get(self):
-        counters.pingpong_incr('hits')
         user = users.get_current_user()
         if user:
-            user_db = utils.get_user(user)
-            self.render('public.html',link="http://trello.com",signout=signout)
+            self.render('public.html',link="http://trello.com",actions=constants.ACTIONS,signout=constants.SIGNOUT)
         else:
             self.redirect('/')
 
     def post(self):
-        counters.pingpong_incr('hits')
         user = users.get_current_user()
         if not user:
             self.redirect('/')
@@ -120,122 +91,113 @@ class Public(Handler):
             title = self.request.get('title')
             link = self.request.get('link')
             description = self.request.get('description')
-            comments = self.request.get('comments')
-            cards = self.request.get('cards')
-            boards = self.request.get('boards')
-            lists = self.request.get('lists')
-            checklists = self.request.get('checklists')
-    
-            if comments == '' and cards == '' and boards == '' and lists == '' and checklists == '':
-                self.render('public.html',check_error=True,signout=signout)
-            else:
-                actions = []
-                if comments != '':
-                    actions.append('comments')
-                if cards != '':
-                    actions.append('cards')                 
-                if boards != '':
-                    actions.append('boards')                    
-                if lists != '':
-                    actions.append('lists')
-                if checklists != '':
-                    actions.append('createChecklist')
-                    actions.append('updateCheck')
-                board_id, link, errors = utils.validate_input(board_id,link)
-        
-                if len(errors) > 0:
-                    self.render('public.html',id=board_id,link=link,errors=errors,signout=signout)
+            actions = [x for x in constants.ACTIONS if self.request.get(x)]
+
+            if actions:
+                board_id, link, errors = utils.validate_input(board_id, link)
+                if errors:
+                    self.render('public.html', id=board_id, link=link, errors=errors, actions=constants.ACTIONS, signout=constants.SIGNOUT)
                 else:
-                    feed_url = utils.create_feed(user,board_id,title,link,description,actions,
-                        public_board=True,get_all=False,token=None)
-                    self.render('congrats.html',feed_url=feed_url,signout=signout)
+                    feed_url = utils.create_feed(
+                        user,board_id,
+                        title,link,
+                        description,
+                        actions,
+                        public_board=True,
+                        get_all=False,
+                        token=None
+                    )
+                    self.render('congrats.html',feed_url=feed_url,signout=constants.SIGNOUT)
+            else: # They didn't mark any of the checkboxes
+                self.render('public.html',check_error=True,actions=constants.ACTIONS,signout=constants.SIGNOUT)
 
-class Feeds(Handler):
-    def get(self, feed_id):
-        self.write(utils.get_feed(feed_id))
-
-    def post(self):
-        pass
-
-class TestBed(Handler):
-    def get(self):
-        pass
 
 class Private(Handler):
     def get(self):
-        counters.pingpong_incr('hits')
         user = users.get_current_user()
-        if not user:
-            self.redirect('/')
-        else:
-            user =  utils.get_user(user)
-            auth_user = False
+        if user:
+            user_obj =  utils.get_user(user)
             user_boards = None
-            if user.auth_token:
-                user_boards = utils.find_boards(user)
-            else:
-                auth_user = True
-            if auth_user:
-                args = {'response_type': 'token', 'key': utils.key, 'scope': 'read', 'expiration': 'never','name': 'TrelloRSS'}
+            if user_obj.auth_token is None: # We need an auth token for this user
+                args = constants.TOKEN_ARGS
                 auth_url = "https://trello.com/1/authorize?%s" % urlencode(args)
-                self.render('private.html',auth_url=auth_url,signout=signout)
-            else:
-                self.render('private.html',user_boards=user_boards,link="http://trello.com",
-                    title="My Trello RSS", description="My Trello RSS Feed",signout=signout)
+                self.render('private.html', actions=constants.ACTIONS, auth_url=auth_url, signout=constants.SIGNOUT)
+            else: 
+                user_boards = utils.find_boards(user_obj)
+                self.render('private.html',
+                    actions=constants.ACTIONS,
+                    user_boards=user_boards,
+                    link="http://trello.com",
+                    title="My Trello RSS",
+                    description="My Trello RSS Feed",
+                    signout=constants.SIGNOUT)
+        else:
+            self.redirect('/')
+
 
     def post(self):
-        counters.pingpong_incr('hits')
+        """
+        Handles adding tokens and creating private boards.
+        TODO: Refactor this into a couple of handlers, and include the public board handling as well
+        to make the code more succinct and extensible. This method is too long and unwieldy.
+
+        """
+
         token = self.request.get('token')
         user = users.get_current_user()
         if not user:
             self.redirect('/')
         user_obj = utils.get_user(user)
-        if token:
-            if(utils.verify_token(token)):
+        if token: # Adding a token for a user
+            if utils.verify_token(token):
                 user_obj.auth_token = token
                 user_obj.put()
                 self.redirect('/privatefeeds')
             else:
-                args = {'response_type': 'token', 'key': utils.key, 'scope': 'read', 'expiration': 'never','name': 'TrelloRSS'}
+                args = constants.TOKEN_ARGS
                 auth_url = "https://trello.com/1/authorize?%s" % urlencode(args)
-                self.render('private.html',incorrect_token=True,auth_url=auth_url,signout=signout)
-        else:
-            board = self.request.get('board')
-            channel_title = self.request.get('title')
-            channel_link = self.request.get('link')
+                self.render('private.html',
+                    actions=constants.ACTIONS,
+                    incorrect_token=True,
+                    auth_url=auth_url,
+                    signout=constants.SIGNOUT)
+        else: # Adding a board for a user
+            board_id = self.request.get('board')
+            title = self.request.get('title')
+            link = self.request.get('link')
             description = self.request.get('description')
-            comments = self.request.get('comments')
-            cards = self.request.get('cards')
-            boards = self.request.get('boards')
-            lists = self.request.get('lists')
-            checklists = self.request.get('checklists')
+            actions = [x for x in constants.ACTIONS if self.request.get(x)]
 
-            actions = []
-            if comments == '' and cards == '' and boards == '' and lists == '' and checklists == '':
-                user_boards = None
-                user_boards = utils.find_boards(user_obj)
-                self.render('private.html',check_error=True,user_boards=user_boards,link=channel_link,
-                    description=description,title=channel_title,signout=signout)
-            else:
-                if comments != '':
-                    actions.append('comments')
-                if cards != '':
-                    actions.append('cards')                 
-                if boards != '':
-                    actions.append('boards')                    
-                if lists != '':
-                    actions.append('lists')
-                if checklists != '':
-                    actions.append('createChecklist')
-                    actions.append('updateCheck')
+            if actions:
                 get_all = False
-                if board == 'all':
+                if board_id == 'all':
                     get_all = True
-                    board = None
-                feed_url = utils.create_feed(user,board,channel_title,channel_link,description,actions,
-                    public_board=False,get_all=get_all,token=user_obj.auth_token)
-                self.render('congrats.html',feed_url=feed_url,signout=signout)
+                    board_id = None
+                feed_url = utils.create_feed(
+                    user,board_id,
+                    title,link,
+                    description,actions,
+                    public_board=False,
+                    get_all=get_all,
+                    token=user_obj.auth_token)
+                self.render('congrats.html',feed_url=feed_url,signout=constants.SIGNOUT)
+            else: # They missed some required info
+                user_boards = utils.find_boards(user_obj)
+                self.render('private.html',
+                    actions=constants.ACTIONS,
+                    check_error=True,
+                    user_boards=user_boards,
+                    link=link,
+                    description=description,
+                    title=title,
+                    signout=constants.SIGNOUT)
 
+
+class Feeds(Handler):
+    """ Just retrieves and prints a feed """
+
+    def get(self, feed_id):
+        self.write(utils.get_feed(feed_id))
 
 
 class LogoutPage(Handler):
@@ -268,48 +230,23 @@ class LogoutPage(Handler):
         self.redirect(target_url) 
 
 
-class UpdateStatsCron(Handler):
-
-  def update_counter(self, key_name):
-
-    # Checking memory cache
-    count = counters.pingpong_get(key_name, from_ping=False)
-    if not count:
-      return
-
-    counter = counters.SimpleCounter.get_by_id(key_name)
-    if not counter:
-      counter = counters.SimpleCounter(id=key_name, name=key_name, count=count)
-    else:
-      counter.count += count
-    counter.put()
-    counters.pingpong_delete(key_name)
-
-  def get(self):
-
-    if capabilities.CapabilitySet('datastore_v3', capabilities=['write']).is_enabled() \
-        and capabilities.CapabilitySet('memcache').is_enabled():
-        self.update_counter('hits')
-
 class Reauth(Handler):
     """When a token expires or was revoked, this is used to reauthorizes said user"""
 
     def get(self):
-        counters.pingpong_incr('hits')
         user = users.get_current_user()
-        if not user:
-            self.redirect('/')
-        else:
-            user = utils.get_user(user)
-            if(utils.verify_token(user.auth_token)):
+        if user:
+            user_obj = utils.get_user(user)
+            if(utils.verify_token(user_obj.auth_token)):
                 self.redirect('/')
             else:
-                args = {'response_type': 'token', 'key': utils.key, 'scope': 'read', 'expiration': 'never','name': 'TrelloRSS'}
+                args = constants.TOKEN_ARGS
                 auth_url = "https://trello.com/1/authorize?%s" % urlencode(args)
-                self.render('reauth.html',auth_url=auth_url,signout=signout)
+                self.render('reauth.html',auth_url=auth_url,signout=constants.SIGNOUT)
+        else:
+            self.redirect('/')
 
     def post(self):
-        counters.pingpong_incr('hits')
         token = self.request.get('token')
         user = users.get_current_user()
         if not user:
@@ -321,32 +258,11 @@ class Reauth(Handler):
                 user_obj.put()
                 self.redirect('/')
             else:
-                args = {'response_type': 'token', 'key': utils.key, 'scope': 'read', 'expiration': 'never','name': 'TrelloRSS'}
+                args = constants.TOKEN_ARGS
                 auth_url = "https://trello.com/1/authorize?%s" % urlencode(args)
-                self.render('reauth.html',incorrect_token=True,auth_url=auth_url,signout=signout)
+                self.render('reauth.html',incorrect_token=True,auth_url=auth_url,signout=constants.SIGNOUT)
         else:
             self.redirect('/')
-
-class FixFeeds(Handler):
-    """
-    I changed the schema up a bit, adding a users property to feeds. Previously I was snagging the token
-    to be used for a private board from a property on the feed itself; this make it troublesome when
-    updating tokens. Now, the feed will have a user key property, and will grab the token from the 
-    user entity instead. Using this Handler to fix all of the feeds currently up and running.
-
-    """
-
-    def get(self):
-        from lib.models import Users
-        users = Users.query()
-        for user in users.iter():
-            feeds = utils.get_feeds(user.feeds)
-            feeds = [x for x in feeds if x.public_board is False]
-            for feed in feeds:
-                feed.user = user.key
-                feed.put()
-        self.write("Success")
-
 
 
 FEED_RE = r'(.*)'
@@ -356,8 +272,5 @@ app = webapp2.WSGIApplication([
     ('/feed/' + FEED_RE, Feeds),
     ('/privatefeeds', Private),
     ('/logout', LogoutPage),
-    ('/testbed', TestBed),
-    ('/stats-update', UpdateStatsCron),
     ('/reauth', Reauth),
-    ('/fix-feeds', FixFeeds)
 ], debug=False)

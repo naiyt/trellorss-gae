@@ -4,14 +4,11 @@
 	<title>Trello RSS Feed Generator</title>
 
 <script language="javascript" type="text/javascript">
-<!--
 function popitup(url) {
 	newwindow=window.open(url,'name','height=600,width=600');
 	if (window.focus) {newwindow.focus()}
 	return false;
 }
-
-// -->
 </script>
 
 {% endblock %}
@@ -26,15 +23,14 @@ function popitup(url) {
 			<p class="text-danger">Ack! That token doesn't appear to be right. Care to try again?</p>
 		{% endif %}
 		<form method="post">
-			<input type="text" name="token">
+			<input type="text" name="token" required>
 			<input type="submit" value="Enter Token">
 		</form>
 		<br>
 		<p>(Setting it up so that you don't have to copy and paste the token is on my to-do list.)</p>
 
-		<p><strong>A note on privacy:</strong> The token will give permission for this app to read your Trello boards for 30 days (or until you revoke its access). All it does is query the API for new actions on your boards every 30 minutes, and create an RSS feed for it. No data from your boards is stored permanently -- it's all stored in memcache, and it's cleared every 30 minutes so that new updates can be cached.</p>
-		<p>This app won't do anything evil with your data, but please not that once you've put up a feed, that feed is publicly accessible to anyone with the url! Thus, if you have any boards with potentially confidential info, I recommend agains creating an RSS feed for it here.</p>
-		<p>Or if you prefer, you can even grab the <a href="https://github.com/naiyt/trellorss-gae">source</a> for this app, and host it on your own Google App Engine instance.</p>
+		<p><strong>A note on privacy:</strong> The token will give permission for this app to read your Trello boards until you revoke its access. All it does is query the API for new actions on your boards whenever required, and create an RSS feed for it. No data from your boards is stored permanently -- it's all stored in memcache, which is cleared every 30 minutes.</p>
+		<p>This app won't do anything evil with your data, but please note that once you've put up a feed, that feed is publicly accessible to anyone with the url! Thus, if you have any boards with potentially confidential info, I recommend against creating an RSS feed for it here.</p>
 
 	{% else %}
 	<form method="post">
@@ -65,11 +61,9 @@ function popitup(url) {
 				<td>What actions would you like to follow?{% if check_error %}<br><span class="error">Please check at least one.</span>{% endif %}</td>
 				<td>
 					<ul>
-						<label><input type="checkbox" name="comments"> Comments</label><br>
-						<label><input type="checkbox" name="cards"> Created Cards</label><br>
-						<label><input type="checkbox" name="boards"> Created Boards</label><br>
-						<label><input type="checkbox" name="lists"> Created Lists</label><br>
-						<label><input type="checkbox" name="checklists"> Checklists</label>
+						{% for key, val in actions.iteritems() %}
+							<label><input type="checkbox" name="{{key}}">{{val}}</label>
+						{% endfor %}
 					</ul>
 				</td>
 

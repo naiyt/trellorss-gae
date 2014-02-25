@@ -1,5 +1,0 @@
-cron:
-
-- description: ping pong counter updater
-  url: /stats-update
-  schedule: every 10 minutes synchronized

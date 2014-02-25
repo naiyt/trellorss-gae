@@ -7,7 +7,7 @@
 
 {% block content %}
 
-	<h2>Create an RSS feed for your Trello boards</h2>
+	<h2>Create RSS feeds for your Trello boards</h2>
 	<hr>
 		<a class="btn btn-lg btn-primary" href="/privatefeeds">Create a feed for my private boards</a>
 		<a class="btn btn-lg btn-primary" href="/publicfeeds">Create a feed for a public board</a>
@@ -25,12 +25,20 @@
 			{% endfor %}
 				</table>
 				
-				<button class="btn btn-default" type="submit" name="delete" value="delete">Delete Selected</button>
-				<button class="btn btn-default" type="submit" name="modify" value="delete">Modify Selected</button>
+				<button class="btn btn-default" type="submit" name="delete" value="delete">Delete Selected Feed</button>
 			</div>
 		</form>
 	{% else %}
 		<p>You don't have any feeds setup yet.</p>
 	{% endif %}	
+
+	<br>
+	<h2>News</h2>
+	<hr>
+	<p><span class='underline'>2/20/2014</span> - A few people requested support for monitoring cards moved between lists. I finally had some time, so that's been added now. <a href='https://trello.com/b/vPyyk1Ut/trello-rss'>Please let me know if you have any issues with it.</a> I recommend logging out and back into your account before creating any new feeds.</p>
+
+	<p>While tinkering around with getting that setup, I updated the main <a href='https://github.com/naiyt/trello-rss'>Trello-RSS module a bit</a> and starting looking a bit at this webapp's source. I'd like to start pushing out more updates and fixing up various aspects of it that don't work or look great currently. So if you have any recommendations, please pop by the <a href='https://trello.com/b/vPyyk1Ut/trello-rss'>Trello board</a>, submit an issue over on <a href='https://github.com/naiyt/trello-rss'>GitHub</a>, or <a href='https://twitter.com/NateCollings'>shoot me a tweet</a>.
+
+	<p>I'm also fully open to contributors, so feel free to fork the source and send a pull request if you have anything you'd like to implement. Help would be greatly appreciated, as I work and am a full time student.
 
 {% endblock content %}

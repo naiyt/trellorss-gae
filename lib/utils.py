@@ -7,7 +7,7 @@ from trellorss.trello import Unauthorized
 from trellorss.trello import ResourceUnavailable
 from google.appengine.ext import ndb
 from google.appengine.api import memcache
-from vars import *
+import constants
 
 def get_user(user):
     user_db = Users.get_by_id(user.user_id())
@@ -17,7 +17,7 @@ def get_user(user):
     return user_db
 
 def verify_token(token):
-    trell = TrelloClient(key, token)
+    trell = TrelloClient(constants.KEY, token)
     try:
         boards = trell.list_boards()
     except Unauthorized:
@@ -60,7 +60,7 @@ def validate_input(board_id,link):
     if try_url:
         board_id = try_url.group(1)
 
-    trell = TrelloRSS(key)
+    trell = TrelloRSS(constants.KEY)
     
     try:
         trell.get_from(board_id, public_board=True)
@@ -104,11 +104,11 @@ def get_feed(feed_id):
         rss = None
         if feed:
             if feed.public_board:
-                rss = TrelloRSS(key,channel_title=feed.channel_title,
+                rss = TrelloRSS(constants.KEY,channel_title=feed.channel_title,
                     rss_channel_link=feed.channel_link,description=feed.channel_description)
             else:
                 user = feed.user.get()
-                rss = TrelloRSS(key,token=user.auth_token,channel_title=feed.channel_title,
+                rss = TrelloRSS(constants.KEY,token=user.auth_token,channel_title=feed.channel_title,
                     rss_channel_link=feed.channel_link,description=feed.channel_description)
             if feed.get_all:
                 if feed.actions:
@@ -126,7 +126,7 @@ def get_feed(feed_id):
         
 
 def find_boards(user):
-    trell = TrelloClient(key, user.auth_token)
+    trell = TrelloClient(constants.KEY, user.auth_token)
     boards = trell.list_boards()
     board_info = {}
     for board in boards:

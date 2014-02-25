@@ -73,3 +73,7 @@ label {
   background-color: #cccccc;
   border-color: #cccccc;
 }
+
+.underline {
+  text-decoration: underline;
+}

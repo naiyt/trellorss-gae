@@ -31,11 +31,9 @@
 				<td>What actions would you like to follow?{% if check_error %}<br><span class="error">Please check at least one.</span>{% endif %}</td>
 				<td>
 					<ul>
-						<label><input type="checkbox" name="comments"> Comments</label><br>
-						<label><input type="checkbox" name="cards"> Created Cards</label><br>
-						<label><input type="checkbox" name="boards"> Created Boards</label><br>
-						<label><input type="checkbox" name="lists"> Created Lists</label><br>
-						<label><input type="checkbox" name="checklists"> Checklists</label>
+						{% for key, val in actions.iteritems() %}
+							<label><input type="checkbox" name="{{key}}">{{val}}</label>
+						{% endfor %}
 					</ul>
 				</td>
 

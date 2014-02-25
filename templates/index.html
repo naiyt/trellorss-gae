@@ -7,8 +7,17 @@
 
 {% block content %}
 
-	<h1>Create an RSS feed for your Trello boards</h1>
+	<h1>Create RSS feeds for your Trello boards</h1>
 	<hr>
-	<h4><a class="btn btn-lg btn-primary" href="{{login}}">Sign in with your Google account</a></h4>
+	<h4><a class="btn btn-lg btn-primary" href="{{login}}">Sign in with Google</a></h4>
+	<br>
+	<br>
+	<h3>News</h3>
+	<hr>
+	<p><span class='underline'>2/20/2014</span> - A few people requested support for monitoring cards moved between lists. I finally had some time, so that's been added now. <a href='https://trello.com/b/vPyyk1Ut/trello-rss'>Please let me know if you have any issues with it.</a> I recommend logging out and back into your account before creating any new feeds.</p>
+
+	<p>While tinkering around with getting that setup, I updated the main <a href='https://github.com/naiyt/trello-rss'>Trello-RSS module a bit</a> and starting looking a bit at this webapp's source. I'd like to start pushing out more updates and fixing up various aspects of it that don't work or look great currently. So if you have any recommendations, please pop by the <a href='https://trello.com/b/vPyyk1Ut/trello-rss'>Trello board</a>, submit an issue over on <a href='https://github.com/naiyt/trello-rss'>GitHub</a>, or <a href='https://twitter.com/NateCollings'>shoot me a tweet</a>.
+
+	<p>I'm also fully open to contributors, so feel free to fork the source and send a pull request if you have anything you'd like to implement. Help would be greatly appreciated, as I work and am a full time student.
 
 {% endblock content %}
