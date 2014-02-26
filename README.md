@@ -12,7 +12,7 @@ Dependencies
 * [Trello-RSS](https://github.com/naiyt/trello-rss)
 * [PyRSS2Gen](https://pypi.python.org/pypi/PyRSS2Gen/1.1)
 
-You also need a (Trello API key)[https://trello.com/1/appKey/generate]. Create a file called `secret.py` in your `lib` directory and enter this line:
+You also need a [Trello API key](https://trello.com/1/appKey/generate). Create a file called `secret.py` in your `lib` directory and enter this line:
 
     KEY = 'your Trello API key'
 
