@@ -18,14 +18,6 @@ handlers:
 - url: /images
   static_dir: images
 
-- url: /stats-update
-  script: main.app
-  login: admin
-
-- url: /fix-feeds
-  script: main.app
-  login: admin
-
 - url: .*
   script: main.app
 
